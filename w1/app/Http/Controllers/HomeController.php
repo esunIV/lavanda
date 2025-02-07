@@ -5,12 +5,17 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Anime2;
 use App\Models\Anime;
+use App\Models\Category;
 
 class HomeController extends Controller
 {
   public function index(){
-    $posts = Anime2::all();
-      return view('home.index', compact('posts'));
+
+    $category = Category::find(1);
+    $post = Anime2::find(1);
+    dd($post->category);
+    //$posts = Anime2::all();
+      //return view('home.index', compact('posts'));
   }
   public function create(){
     return view('home.create');

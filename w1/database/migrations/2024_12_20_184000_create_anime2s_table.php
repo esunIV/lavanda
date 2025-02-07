@@ -17,12 +17,15 @@ return new class extends Migration
             $table->string('студия');
             $table->string('название');
             $table->float('оценка');
-
+            
             $table->softDeletes();
-            $table->unsignedBigItager('category_id')->nullable();
-            $table->index('category_id','anime2_category_idx');
-            $table->foreing('category_id','anime2_category_fk')->on('categories')->refrences('id') 
+            $table->index('category_id', 'anime2_category_idx');
+            
+            $table->unsignedBigInteger('category_id')->nullable();
+            $table->foreign('category_id', 'anime2_category_fk')->references('id')->on('categories')->onDelete('cascade');
+
         });
+        
     }
 
     /**
