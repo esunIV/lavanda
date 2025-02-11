@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="16dp"
+    android:background="#222222">
+
+    <!-- Контейнер для игрового поля -->
+    <FrameLayout
+        android:id="@+id/game_container"
+        android:layout_width="300dp"
+        android:layout_height="600dp"
+        android:background="#000000" />
+
+    <!-- Кнопки управления -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="16dp">
+
+        <Button
+            android:id="@+id/btnLeft"
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:text="◀" />
+
+        <Button
+            android:id="@+id/btnRotate"
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:text="⟳" />
+
+        <Button
+            android:id="@+id/btnRight"
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:text="▶" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btnDown"
+        android:layout_width="120dp"
+        android:layout_height="wrap_content"
+        android:text="▼"
+        android:layout_marginTop="8dp"/>
+
+</LinearLayout>
