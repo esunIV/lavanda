@@ -1,0 +1,129 @@
+<?php
+$host = 'localhost';
+$dbname = 'tz';
+$user = 'root';
+$pass = '';
+
+try {
+    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $user, $pass);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    die("Connection failed: " . $e->getMessage());
+}
+//подсчет товара 
+function countProducts($pdo, $groupId) {
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM products WHERE id_group = ?");
+    $stmt->execute([$groupId]);
+    $count = $stmt->fetchColumn();
+    $stmt = $pdo->prepare("SELECT id FROM `groups` WHERE id_parent = ?");
+    $stmt->execute([$groupId]);
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $count += countProducts($pdo, $row['id']);
+    }
+    return $count;
+}
+////проверка подгрупп
+function getChildGroupIds($pdo, $groupId) {
+    $ids = [$groupId];
+    $stmt = $pdo->prepare("SELECT id FROM `groups` WHERE id_parent = ?");
+    $stmt->execute([$groupId]);
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $childIds = getChildGroupIds($pdo, $row['id']);
+        $ids = array_merge($ids, $childIds);
+    }
+    return $ids;
+}
+
+//  отображения групп
+function displayGroups($pdo, $parentId = 0) {
+    $stmt = $pdo->prepare("SELECT * FROM `groups` WHERE id_parent = ?");
+    $stmt->execute([$parentId]);
+    echo "<ul>";
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $hasChildren = hasChildren($pdo, $row['id']);
+        echo "<li>";
+        // Иконка для сворачивания/разворачивания
+        if ($hasChildren) {
+            echo "<span class='toggle-icon' onclick='toggleSubgroups(this)'>▶</span>";
+        }
+        // Ссылка на товары группы
+        echo "<a href='?group={$row['id']}' class='group-link'>{$row['name']} (" . countProducts($pdo, $row['id']) . ")</a>";
+        // Подгруппы
+        if ($hasChildren) {
+            echo "<div class='subgroups'>";
+            displayGroups($pdo, $row['id']);
+            echo "</div>";
+        }
+        echo "</li>";
+    }
+    echo "</ul>";
+}
+
+function hasChildren($pdo, $groupId) {
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM `groups` WHERE id_parent = ?");
+    $stmt->execute([$groupId]);
+    return $stmt->fetchColumn() > 0;
+}
+
+// Стили
+echo <<<HTML
+<style>
+    .toggle-icon {
+        cursor: pointer;
+        margin-right: 5px;
+        user-select: none;
+    }
+    .subgroups {
+        margin-left: 20px;
+        display: none;
+    }
+    .subgroups.active {
+        display: block;
+    }
+    .group-link {
+        text-decoration: none;
+        color: #2c3e50;
+    }
+    .group-link:hover {
+        text-decoration: underline;
+    }
+</style>
+HTML;
+
+// JavaScript
+echo <<<HTML
+<script>
+    function toggleSubgroups(icon) {
+        const subgroups = icon.parentElement.querySelector('.subgroups');
+        subgroups.classList.toggle('active');
+        icon.textContent = subgroups.classList.contains('active') ? '▼' : '▶';
+    }
+</script>
+HTML;
+
+
+echo "<h2>Группы товаров</h2>";
+echo "<li><a href='https://tz.local'>Все товары</a></li>";
+displayGroups($pdo);
+
+//вывод товаров
+if (isset($_GET['group'])) {
+    $selectedGroup = (int)$_GET['group'];
+    $groupIds = getChildGroupIds($pdo, $selectedGroup);
+    $in = str_repeat('?,', count($groupIds) - 1) . '?';
+    $stmt = $pdo->prepare("SELECT * FROM products WHERE id_group IN ($in)");
+    $stmt->execute($groupIds);
+    echo "<h2>Товары</h2><ul>";
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        echo "<li>{$row['name']}</li>";
+    }
+    echo "</ul>";
+} else {
+    $stmt = $pdo->query("SELECT * FROM products");
+    echo "<h2>Все товары</h2><ul>";
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        echo "<li>{$row['name']}</li>";
+    }
+    echo "</ul>";
+}
+?>
